@@ -27,7 +27,6 @@ import CLibvenice
 @_exported import Data
 @_exported import String
 
-
 public var standardInputStream = try! File(fileDescriptor: STDIN_FILENO)
 public var standardOutputStream = try! File(fileDescriptor: STDOUT_FILENO)
 public var standardErrorStream = try! File(fileDescriptor: STDERR_FILENO)
@@ -73,10 +72,8 @@ public final class File {
         return position
     }
 
-    public func eof() throws -> Bool {
-        let isEof = fileeof(file)
-        try FileError.assertNoError()
-        return isEof != 0
+    public var eof: Bool {
+        return fileeof(file) != 0
     }
 
     public lazy var fileExtension: String? = {
@@ -101,7 +98,7 @@ public final class File {
     }
 
 	public convenience init(path: String, mode: Mode = .Read) throws {
-        try self.init(file:  fileopen(path, mode.value, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))
+        try self.init(file: fileopen(path, mode.value, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))
         self.path = path
 	}
 
@@ -154,13 +151,12 @@ public final class File {
     }
 
     public func read(deadline: Deadline = noDeadline) throws -> Data {
-        try seek(0)
         var data = Data()
 
         while true {
             data += try read(length: 256)
 
-            if try eof() {
+            if eof {
                 break
             }
         }
@@ -214,8 +210,15 @@ extension File {
 }
 
 extension File {
+    public static func workingDirectory() throws -> String {
+        var buffer = String.bufferWithSize(Int(MAXNAMLEN))
+        errno = 0
+        let workingDirectory = getcwd(&buffer, buffer.count)
+        try FileError.assertNoError()
+        return String.fromCString(workingDirectory)!
+    }
 
-    public class func contentsOfDirectoryAtPath(path: String) throws -> [String] {
+    public static func contentsOfDirectoryAtPath(path: String) throws -> [String] {
         var contents: [String] = []
 
         let dir = opendir(path)
@@ -250,7 +253,7 @@ extension File {
         return contents
     }
 
-    public class func fileExistsAtPath(path: String, inout isDirectory: Bool) -> Bool {
+    public static func fileExistsAtPath(path: String, inout isDirectory: Bool) -> Bool {
         var s = stat()
         if lstat(path, &s) >= 0 {
             if (s.st_mode & S_IFMT) == S_IFLNK {

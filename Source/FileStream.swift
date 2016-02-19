@@ -44,7 +44,7 @@ public final class FileStream: StreamType {
     public func receive() throws -> Data {
         try assertNotClosed()
         do {
-            if try file.eof() {
+            if file.eof {
                 file.close()
                 return []
             } else {
