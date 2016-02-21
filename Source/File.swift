@@ -112,7 +112,7 @@ public final class File {
         }
 	}
 
-    public func write(data: Data, flush: Bool = true, deadline: Deadline = noDeadline) throws {
+    public func write(data: Data, flush: Bool = true, deadline: Deadline = never) throws {
         try assertNotClosed()
 
         let bytesProcessed = data.withUnsafeBufferPointer {
@@ -126,7 +126,7 @@ public final class File {
         }
 	}
 
-    public func read(length length: Int, deadline: Deadline = noDeadline) throws -> Data {
+    public func read(length length: Int, deadline: Deadline = never) throws -> Data {
         try assertNotClosed()
 
         var data = Data.bufferWithSize(length)
@@ -138,7 +138,7 @@ public final class File {
         return data.prefix(bytesProcessed)
     }
 
-    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, deadline: Deadline = noDeadline) throws -> Data {
+    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, deadline: Deadline = never) throws -> Data {
         try assertNotClosed()
 
         var data = Data.bufferWithSize(highWaterMark)
@@ -150,7 +150,7 @@ public final class File {
         return data.prefix(bytesProcessed)
     }
 
-    public func read(deadline deadline: Deadline = noDeadline) throws -> Data {
+    public func read(deadline deadline: Deadline = never) throws -> Data {
         var data = Data()
 
         while true {
@@ -164,7 +164,7 @@ public final class File {
         return data
     }
 
-    public func flush(deadline: Deadline = noDeadline) throws {
+    public func flush(deadline: Deadline = never) throws {
         try assertNotClosed()
         fileflush(file, deadline)
         try FileError.assertNoError()
@@ -204,7 +204,7 @@ public final class File {
 }
 
 extension File {
-    public func write(convertible: DataConvertible, flush: Bool = true, deadline: Deadline = noDeadline) throws {
+    public func write(convertible: DataConvertible, flush: Bool = true, deadline: Deadline = never) throws {
         try write(convertible.data, flush: flush, deadline: deadline)
     }
 }
