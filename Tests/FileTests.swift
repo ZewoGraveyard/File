@@ -26,7 +26,7 @@ import XCTest
 import File
 
 class FileTests: XCTestCase {
-    func testExample() {
+    func testReadWrite() {
         do {
             let file = try File(path: "/tmp/zewo-test-file", mode: .TruncateReadWrite)
             try file.write("abc")
@@ -45,6 +45,66 @@ class FileTests: XCTestCase {
             data = try file.read(length: 6)
             XCTAssert(data.count == 0)
             XCTAssert(file.eof)
+        } catch {
+            XCTFail()
+        }
+    }
+
+    func testReadAllFile() {
+        do {
+            let file = try File(path: "/tmp/zewo-test-file", mode: .TruncateReadWrite)
+            let word = "hello"
+            try file.write(word)
+            try file.seek(0)
+            let data = try file.read()
+            XCTAssert(data.count == word.utf8.count)
+        } catch {
+            XCTFail()
+        }
+    }
+
+//    func testFifo() {
+//        do {
+//            let readFile = try File(path: "/tmp/fifo")
+//            let writeFile = try File(path: "/tmp/fifo", mode: .TruncateWrite)
+//            let word = "hello"
+//            after(3 * seconds) {
+//                try! writeFile.write(word)
+//            }
+//
+//            let data = try readFile.read(length: word.utf8.count)
+//            print(data)
+//        } catch {
+//            print(error)
+//            XCTFail()
+//        }
+//    }
+
+    func testZero() {
+        do {
+            let file = try File(path: "/dev/zero")
+            let count = 4096
+            let length = 256
+
+            for _ in 0 ..< count {
+                let data = try file.read(length: length)
+                XCTAssert(data.count == length)
+            }
+        } catch {
+            XCTFail()
+        }
+    }
+
+    func testRandom() {
+        do {
+            let file = try File(path: "/dev/random")
+            let count = 4096
+            let length = 256
+
+            for _ in 0 ..< count {
+                let data = try file.read(length: length)
+                XCTAssert(data.count == length)
+            }
         } catch {
             XCTFail()
         }

@@ -150,11 +150,11 @@ public final class File {
         return data.prefix(bytesProcessed)
     }
 
-    public func read(deadline: Deadline = noDeadline) throws -> Data {
+    public func read(deadline deadline: Deadline = noDeadline) throws -> Data {
         var data = Data()
 
         while true {
-            data += try read(length: 256)
+            data += try read(length: 256, deadline: deadline)
 
             if eof {
                 break
