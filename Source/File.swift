@@ -305,7 +305,7 @@ extension File {
         }
     }
 
-    public func removeItemAt(path: String) throws {
+    public static func removeItemAt(path: String) throws {
         if rmdir(path) == 0 {
             return
         } else if errno == ENOTDIR {
