@@ -254,28 +254,33 @@ extension File {
     }
 
     public static func fileExistsAt(path: String) -> (fileExists: Bool, isDirectory: Bool) {
-        var status = stat()
-        var isDirectory: Bool
+        var s = stat()
+        var isDirectory = false
 
-        if lstat(path, &status) >= 0 {
-            if (status.st_mode & S_IFMT) == S_IFLNK {
-                if stat(path, &status) >= 0 {
-                    isDirectory = (status.st_mode & S_IFMT) == S_IFDIR
+        if lstat(path, &s) >= 0 {
+            if (s.st_mode & S_IFMT) == S_IFLNK {
+                if stat(path, &s) >= 0 {
+                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
                 } else {
-                    return (false, false)
+                    return (false, isDirectory)
                 }
             } else {
-                isDirectory = (status.st_mode & S_IFMT) == S_IFDIR
+                isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
             }
 
-            if (status.st_mode & S_IFMT) == S_IFLNK {
-                if (status.st_mode & S_ISVTX) == S_ISVTX {
+            // don't chase the link for this magic case -- we might be /Net/foo
+            // which is a symlink to /private/Net/foo which is not yet mounted...
+            if (s.st_mode & S_IFMT) == S_IFLNK {
+                if (s.st_mode & S_ISVTX) == S_ISVTX {
                     return (true, isDirectory)
                 }
+                // chase the link; too bad if it is a slink to /Net/foo
+                stat(path, &s) >= 0
             }
+        } else {
+            return (false, isDirectory)
         }
-
-        return (false, false)
+        return (true, isDirectory)
     }
 
     public static func createDirectoryAt(path: String, withIntermediateDirectories createIntermediates: Bool = false) throws {
@@ -287,7 +292,6 @@ extension File {
                 if fileExistsAt(path).fileExists {
                     try createDirectoryAt(parent, withIntermediateDirectories: true)
                 }
-
                 mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
                 try FileError.assertNoError()
             } else if isDirectory {
@@ -299,5 +303,14 @@ extension File {
             mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
             try FileError.assertNoError()
         }
+    }
+
+    public func removeItemAtPath(path: String) throws {
+        if rmdir(path) == 0 {
+            return
+        } else if errno == ENOTDIR {
+            unlink(path)
+        }
+        try FileError.assertNoError()
     }
 }
