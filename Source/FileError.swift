@@ -32,6 +32,7 @@ public enum FileError: ErrorType {
     case NoBufferSpaceAvailabe(description: String, data: Data)
     case OperationTimedOut(description: String, data: Data)
     case ClosedFile(description: String)
+    case FileExists(description: String)
 
     static func lastReceiveErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
         let data = source.prefix(bytesProcessed)
@@ -53,6 +54,8 @@ public enum FileError: ErrorType {
             return .NoBufferSpaceAvailabe(description: lastErrorDescription, data: data)
         case ETIMEDOUT:
             return .OperationTimedOut(description: lastErrorDescription, data: data)
+        case EEXIST:
+            return .FileExists(description: lastErrorDescription)
         default:
             return .Unknown(description: lastErrorDescription)
         }
@@ -72,6 +75,8 @@ public enum FileError: ErrorType {
             return .NoBufferSpaceAvailabe(description: lastErrorDescription, data: nil)
         case ETIMEDOUT:
             return .OperationTimedOut(description: lastErrorDescription, data: nil)
+        case EEXIST:
+            return .FileExists(description: lastErrorDescription)
         default:
             return .Unknown(description: lastErrorDescription)
         }
@@ -114,6 +119,8 @@ extension FileError: CustomStringConvertible {
         case OperationTimedOut(let description, _):
             return description
         case ClosedFile(let description):
+            return description
+        case .FileExists(let description):
             return description
         }
     }

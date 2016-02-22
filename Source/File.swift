@@ -218,7 +218,7 @@ extension File {
         return String.fromCString(workingDirectory)!
     }
 
-    public static func contentsOfDirectoryAtPath(path: String) throws -> [String] {
+    public static func contentsOfDirectoryAt(path: String) throws -> [String] {
         var contents: [String] = []
 
         let dir = opendir(path)
@@ -253,32 +253,51 @@ extension File {
         return contents
     }
 
-    public static func fileExistsAtPath(path: String, inout isDirectory: Bool) -> Bool {
-        var s = stat()
-        if lstat(path, &s) >= 0 {
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if stat(path, &s) >= 0 {
-                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+    public static func fileExistsAt(path: String) -> (fileExists: Bool, isDirectory: Bool) {
+        var status = stat()
+        var isDirectory: Bool
+
+        if lstat(path, &status) >= 0 {
+            if (status.st_mode & S_IFMT) == S_IFLNK {
+                if stat(path, &status) >= 0 {
+                    isDirectory = (status.st_mode & S_IFMT) == S_IFDIR
                 } else {
-                    return false
+                    return (false, false)
                 }
             } else {
-                isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+                isDirectory = (status.st_mode & S_IFMT) == S_IFDIR
             }
 
-            // don't chase the link for this magic case -- we might be /Net/foo
-            // which is a symlink to /private/Net/foo which is not yet mounted...
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if (s.st_mode & S_ISVTX) == S_ISVTX {
-                    return true
+            if (status.st_mode & S_IFMT) == S_IFLNK {
+                if (status.st_mode & S_ISVTX) == S_ISVTX {
+                    return (true, isDirectory)
                 }
-                // chase the link; too bad if it is a slink to /Net/foo
-                stat(path, &s) >= 0
             }
-        } else {
-            return false
         }
-        return true
+
+        return (false, false)
     }
 
+    public static func createDirectoryAt(path: String, withIntermediateDirectories createIntermediates: Bool = false) throws {
+        if createIntermediates {
+            let (fileExists, isDirectory) = fileExistsAt(path)
+            if fileExists {
+                let parent = path.dropLastPathComponent
+
+                if fileExistsAt(path).fileExists {
+                    try createDirectoryAt(parent, withIntermediateDirectories: true)
+                }
+
+                mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
+                try FileError.assertNoError()
+            } else if isDirectory {
+                return
+            } else {
+                throw FileError.FileExists(description: "File exists")
+            }
+        } else {
+            mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
+            try FileError.assertNoError()
+        }
+    }
 }
