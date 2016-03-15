@@ -24,6 +24,10 @@
 
 @_exported import Stream
 
+public var standardInputStream = try! FileStream(file: File(fileDescriptor: STDIN_FILENO))
+public var standardOutputStream = try! FileStream(file: File(fileDescriptor: STDOUT_FILENO))
+public var standardErrorStream = try! FileStream(file: File(fileDescriptor: STDERR_FILENO))
+
 public final class FileStream: StreamType {
     private let file: File
     public let metadata: [String: Any] = [:]

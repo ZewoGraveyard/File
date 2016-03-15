@@ -27,10 +27,6 @@ import CLibvenice
 @_exported import Data
 @_exported import String
 
-public var standardInputStream = try! File(fileDescriptor: STDIN_FILENO)
-public var standardOutputStream = try! File(fileDescriptor: STDOUT_FILENO)
-public var standardErrorStream = try! File(fileDescriptor: STDERR_FILENO)
-
 public final class File {
 	public enum Mode {
 		case Read
