@@ -25,7 +25,7 @@
 @_exported import System
 @_exported import Data
 
-public enum FileError: ErrorType {
+public enum FileError: ErrorProtocol {
     case Unknown(description: String)
     case BrokenPipe(description: String, data: Data)
     case ConnectionResetByPeer(description: String, data: Data)
@@ -62,7 +62,7 @@ public enum FileError: ErrorType {
     }
 
     static var lastErrorDescription: String {
-        return String.fromCString(strerror(errno))!
+        return String(cString: strerror(errno))
     }
 
     static var lastError: FileError {

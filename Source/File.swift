@@ -211,7 +211,7 @@ extension File {
         errno = 0
         let workingDirectory = getcwd(&buffer, buffer.count)
         try FileError.assertNoError()
-        return String.fromCString(workingDirectory)!
+        return String(cString: workingDirectory)
     }
 
     public static func contentsOfDirectoryAt(path: String) throws -> [String] {
@@ -232,12 +232,12 @@ extension File {
         var entry: UnsafeMutablePointer<dirent> = readdir(dir)
 
         while entry != nil {
-            if let entryName = withUnsafePointer(&entry.memory.d_name, { (ptr) -> String? in
-                let int8Ptr = unsafeBitCast(ptr, UnsafePointer<Int8>.self)
-                return String.fromCString(int8Ptr)
+            if let entryName = withUnsafePointer(&entry.pointee.d_name, { (ptr) -> String? in
+                let int8Ptr = unsafeBitCast(ptr, to: UnsafePointer<Int8>.self)
+                return String(validatingUTF8: int8Ptr)
             }) {
 
-                // TODO: `entryName` should be limited in length to `entry.memory.d_namlen`.
+                // TODO: `entryName` should be limited in length to `entry.pointee.d_namlen`.
                 if !excludeNames.contains(entryName) {
                     contents.append(entryName)
                 }
