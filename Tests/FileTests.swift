@@ -63,6 +63,18 @@ class FileTests: XCTestCase {
         }
     }
 
+    func testFileSize() {
+        do {
+            let file = try File(path: "/tmp/zewo-test-file", mode: .TruncateReadWrite)
+            try file.write("hello")
+            XCTAssert(file.length == 5)
+            try file.write(" world")
+            XCTAssert(file.length == 11)
+        } catch {
+            XCTFail()
+        }
+    }
+
 //    func testFifo() {
 //        do {
 //            let readFile = try File(path: "/tmp/fifo")
