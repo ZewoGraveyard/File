@@ -207,7 +207,7 @@ extension File {
 
 extension File {
     public static func workingDirectory() throws -> String {
-        var buffer = String.bufferWithSize(Int(MAXNAMLEN))
+        var buffer = String.buffer(size: Int(MAXNAMLEN))
         errno = 0
         let workingDirectory = getcwd(&buffer, buffer.count)
         try FileError.assertNoError()
