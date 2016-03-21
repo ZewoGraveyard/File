@@ -201,7 +201,7 @@ public final class File {
 
 extension File {
     public func write(convertible: DataConvertible, flush: Bool = true, deadline: Deadline = never) throws {
-        try write(convertible.data, flush: flush, deadline: deadline)
+        try write(convertible.xData, flush: flush, deadline: deadline)
     }
 }
 
