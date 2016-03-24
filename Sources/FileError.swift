@@ -22,17 +22,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-@_exported import System
-@_exported import Data
-
 public enum FileError: ErrorProtocol {
-    case Unknown(description: String)
-    case BrokenPipe(description: String, data: Data)
-    case ConnectionResetByPeer(description: String, data: Data)
-    case NoBufferSpaceAvailabe(description: String, data: Data)
-    case OperationTimedOut(description: String, data: Data)
-    case ClosedFile(description: String)
-    case FileExists(description: String)
+    case unknown(description: String)
+    case brokenPipe(description: String, data: Data)
+    case connectionResetByPeer(description: String, data: Data)
+    case noBufferSpaceAvailabe(description: String, data: Data)
+    case operationTimedOut(description: String, data: Data)
+    case closedFile(description: String)
+    case fileExists(description: String)
 
     static func lastReceiveErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
         let data = source.prefix(bytesProcessed)
@@ -47,17 +44,17 @@ public enum FileError: ErrorProtocol {
     static func lastErrorWithData(data: Data) -> FileError {
         switch errno {
         case EPIPE:
-            return .BrokenPipe(description: lastErrorDescription, data: data)
+            return .brokenPipe(description: lastErrorDescription, data: data)
         case ECONNRESET:
-            return .ConnectionResetByPeer(description: lastErrorDescription, data: data)
+            return .connectionResetByPeer(description: lastErrorDescription, data: data)
         case ENOBUFS:
-            return .NoBufferSpaceAvailabe(description: lastErrorDescription, data: data)
+            return .noBufferSpaceAvailabe(description: lastErrorDescription, data: data)
         case ETIMEDOUT:
-            return .OperationTimedOut(description: lastErrorDescription, data: data)
+            return .operationTimedOut(description: lastErrorDescription, data: data)
         case EEXIST:
-            return .FileExists(description: lastErrorDescription)
+            return .fileExists(description: lastErrorDescription)
         default:
-            return .Unknown(description: lastErrorDescription)
+            return .unknown(description: lastErrorDescription)
         }
     }
 
@@ -68,22 +65,22 @@ public enum FileError: ErrorProtocol {
     static var lastError: FileError {
         switch errno {
         case EPIPE:
-            return .BrokenPipe(description: lastErrorDescription, data: nil)
+            return .brokenPipe(description: lastErrorDescription, data: nil)
         case ECONNRESET:
-            return .ConnectionResetByPeer(description: lastErrorDescription, data: nil)
+            return .connectionResetByPeer(description: lastErrorDescription, data: nil)
         case ENOBUFS:
-            return .NoBufferSpaceAvailabe(description: lastErrorDescription, data: nil)
+            return .noBufferSpaceAvailabe(description: lastErrorDescription, data: nil)
         case ETIMEDOUT:
-            return .OperationTimedOut(description: lastErrorDescription, data: nil)
+            return .operationTimedOut(description: lastErrorDescription, data: nil)
         case EEXIST:
-            return .FileExists(description: lastErrorDescription)
+            return .fileExists(description: lastErrorDescription)
         default:
-            return .Unknown(description: lastErrorDescription)
+            return .unknown(description: lastErrorDescription)
         }
     }
 
     static var closedFileError: FileError {
-        return FileError.ClosedFile(description: "Closed file")
+        return FileError.closedFile(description: "Closed file")
     }
 
     static func assertNoError() throws {
@@ -108,19 +105,19 @@ public enum FileError: ErrorProtocol {
 extension FileError: CustomStringConvertible {
     public var description: String {
         switch self {
-        case Unknown(let description):
+        case unknown(let description):
             return description
-        case .BrokenPipe(let description, _):
+        case .brokenPipe(let description, _):
             return description
-        case ConnectionResetByPeer(let description, _):
+        case connectionResetByPeer(let description, _):
             return description
-        case NoBufferSpaceAvailabe(let description, _):
+        case noBufferSpaceAvailabe(let description, _):
             return description
-        case OperationTimedOut(let description, _):
+        case operationTimedOut(let description, _):
             return description
-        case ClosedFile(let description):
+        case closedFile(let description):
             return description
-        case .FileExists(let description):
+        case .fileExists(let description):
             return description
         }
     }

@@ -29,25 +29,25 @@ import CLibvenice
 
 public final class File {
 	public enum Mode {
-		case Read
-        case CreateWrite
-		case TruncateWrite
-		case AppendWrite
-		case ReadWrite
-        case CreateReadWrite
-		case TruncateReadWrite
-		case AppendReadWrite
+		case read
+        case createWrite
+		case truncateWrite
+		case appendWrite
+		case readWrite
+        case createReadWrite
+		case truncateReadWrite
+		case appendReadWrite
 
         var value: Int32 {
             switch self {
-            case .Read: return O_RDONLY
-            case .CreateWrite: return (O_WRONLY | O_CREAT | O_EXCL)
-            case .TruncateWrite: return (O_WRONLY | O_CREAT | O_TRUNC)
-            case .AppendWrite: return (O_WRONLY | O_CREAT | O_APPEND)
-            case .ReadWrite: return (O_RDWR)
-            case .CreateReadWrite: return (O_RDWR | O_CREAT | O_EXCL)
-            case .TruncateReadWrite: return (O_RDWR | O_CREAT | O_TRUNC)
-            case .AppendReadWrite: return (O_RDWR | O_CREAT | O_APPEND)
+            case .read: return O_RDONLY
+            case .createWrite: return (O_WRONLY | O_CREAT | O_EXCL)
+            case .truncateWrite: return (O_WRONLY | O_CREAT | O_TRUNC)
+            case .appendWrite: return (O_WRONLY | O_CREAT | O_APPEND)
+            case .readWrite: return (O_RDWR)
+            case .createReadWrite: return (O_RDWR | O_CREAT | O_EXCL)
+            case .truncateReadWrite: return (O_RDWR | O_CREAT | O_TRUNC)
+            case .appendReadWrite: return (O_RDWR | O_CREAT | O_APPEND)
             }
         }
 	}
@@ -93,7 +93,7 @@ public final class File {
         try FileError.assertNoError()
     }
 
-	public convenience init(path: String, mode: Mode = .Read) throws {
+	public convenience init(path: String, mode: Mode = .read) throws {
         try self.init(file: fileopen(path, mode.value, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))
         self.path = path
 	}
@@ -220,7 +220,7 @@ extension File {
         let dir = opendir(path)
 
         if dir == nil {
-            throw FileError.Unknown(description: "Could not open directory at \(path)")
+            throw FileError.unknown(description: "Could not open directory at \(path)")
         }
 
         defer {
@@ -293,7 +293,7 @@ extension File {
             } else if isDirectory {
                 return
             } else {
-                throw FileError.FileExists(description: "File exists")
+                throw FileError.fileExists(description: "File exists")
             }
         } else {
             mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)

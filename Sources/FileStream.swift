@@ -22,13 +22,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-@_exported import Stream
-
 public var standardInputStream = try! FileStream(file: File(fileDescriptor: STDIN_FILENO))
 public var standardOutputStream = try! FileStream(file: File(fileDescriptor: STDOUT_FILENO))
 public var standardErrorStream = try! FileStream(file: File(fileDescriptor: STDERR_FILENO))
 
-public final class FileStream: StreamType {
+public final class FileStream: Stream {
     private let file: File
     public let metadata: [String: Any] = [:]
 
@@ -54,10 +52,10 @@ public final class FileStream: StreamType {
             } else {
                 return try file.read(lowWaterMark: lowWaterMark, highWaterMark: highWaterMark)
             }
-        } catch FileError.ConnectionResetByPeer(_, let data) {
-            throw StreamError.ClosedStream(data: data)
-        } catch FileError.BrokenPipe(_, let data) {
-            throw StreamError.ClosedStream(data: data)
+        } catch FileError.connectionResetByPeer(_, let data) {
+            throw StreamError.closedStream(data: data)
+        } catch FileError.brokenPipe(_, let data) {
+            throw StreamError.closedStream(data: data)
         }
     }
 
@@ -65,10 +63,10 @@ public final class FileStream: StreamType {
         try assertNotClosed()
         do {
             try file.write(data, flush: false)
-        } catch FileError.ConnectionResetByPeer(_, let data) {
-            throw StreamError.ClosedStream(data: data)
-        } catch FileError.BrokenPipe(_, let data) {
-            throw StreamError.ClosedStream(data: data)
+        } catch FileError.connectionResetByPeer(_, let data) {
+            throw StreamError.closedStream(data: data)
+        } catch FileError.brokenPipe(_, let data) {
+            throw StreamError.closedStream(data: data)
         }
     }
 
@@ -76,10 +74,10 @@ public final class FileStream: StreamType {
         try assertNotClosed()
         do {
             try file.flush()
-        } catch FileError.ConnectionResetByPeer(_, let data) {
-            throw StreamError.ClosedStream(data: data)
-        } catch FileError.BrokenPipe(_, let data) {
-            throw StreamError.ClosedStream(data: data)
+        } catch FileError.connectionResetByPeer(_, let data) {
+            throw StreamError.closedStream(data: data)
+        } catch FileError.brokenPipe(_, let data) {
+            throw StreamError.closedStream(data: data)
         }
     }
 
@@ -89,7 +87,7 @@ public final class FileStream: StreamType {
 
     private func assertNotClosed() throws {
         if closed {
-            throw StreamError.ClosedStream(data: nil)
+            throw StreamError.closedStream(data: nil)
         }
     }
 }
