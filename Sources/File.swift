@@ -131,7 +131,7 @@ public final class File {
         }
 
         try FileError.assertNoReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
-        return data.prefix(bytesProcessed)
+        return Data(data.prefix(bytesProcessed))
     }
 
     public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, deadline: Deadline = never) throws -> Data {
@@ -143,7 +143,7 @@ public final class File {
         }
 
         try FileError.assertNoReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
-        return data.prefix(bytesProcessed)
+        return Data(data.prefix(bytesProcessed))
     }
 
     public func read(deadline deadline: Deadline = never) throws -> Data {

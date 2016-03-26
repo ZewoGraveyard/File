@@ -32,12 +32,12 @@ public enum FileError: ErrorProtocol {
     case fileExists(description: String)
 
     static func lastReceiveErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
-        let data = source.prefix(bytesProcessed)
+        let data = Data(source.prefix(bytesProcessed))
         return lastErrorWithData(data)
     }
 
     static func lastSendErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
-        let data = source.suffix(bytesProcessed)
+        let data = Data(source.suffix(bytesProcessed))
         return lastErrorWithData(data)
     }
 
