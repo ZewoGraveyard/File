@@ -27,7 +27,7 @@ import CLibvenice
 @_exported import Data
 @_exported import String
 
-public final class File {
+public final class File: Stream {
 	public enum Mode {
 		case read
         case createWrite
@@ -107,6 +107,10 @@ public final class File {
             fileclose(file)
         }
 	}
+    
+}
+
+extension File {
 
     public func write(data: Data, flush: Bool = true, timingOut deadline: Double = .never) throws {
         try assertNotClosed()
@@ -197,6 +201,18 @@ public final class File {
             throw FileError.closedFileError
         }
     }
+}
+
+extension File {
+    
+    public func send(data: Data, timingOut deadline: Double) throws {
+        try write(data, flush: true, timingOut: deadline)
+    }
+    
+    public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
+        return try read(length: byteCount, timingOut: deadline)
+    }
+    
 }
 
 extension File {
