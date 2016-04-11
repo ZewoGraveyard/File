@@ -50,7 +50,7 @@ public final class FileStream: Stream {
                 file.close()
                 return []
             } else {
-                return try file.read(lowWaterMark: lowWaterMark, highWaterMark: byteCount, timingOut: deadline)
+                return try file.read(lowWaterMark: lowWaterMark, highWaterMark: min(byteCount, highWaterMark), timingOut: deadline)
             }
         } catch FileError.connectionResetByPeer(_, let data) {
             throw StreamError.closedStream(data: data)
