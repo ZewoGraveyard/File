@@ -27,7 +27,7 @@ import CLibvenice
 @_exported import Data
 @_exported import String
 
-public final class File {
+public final class File: Stream {
 	public enum Mode {
 		case read
         case createWrite
@@ -55,7 +55,7 @@ public final class File {
     private var file: mfile
     public private(set) var closed = false
     public private(set) var path: String? = nil
-
+    
     public func tell() throws -> Int {
         let position = Int(filetell(file))
         try FileError.assertNoError()
@@ -107,8 +107,11 @@ public final class File {
             fileclose(file)
         }
 	}
+    
+}
 
-    public func write(data: Data, flush: Bool = true, deadline: Double = .never) throws {
+extension File {
+    public func write(data: Data, flush: Bool = true, timingOut deadline: Double = .never) throws {
         try assertNotClosed()
 
         let bytesProcessed = data.withUnsafeBufferPointer {
@@ -118,11 +121,11 @@ public final class File {
         try FileError.assertNoSendErrorWithData(data, bytesProcessed: bytesProcessed)
 
         if flush {
-            try self.flush(deadline)
+            try self.flush(timingOut: deadline)
         }
 	}
 
-    public func read(length length: Int, deadline: Double = .never) throws -> Data {
+    public func read(length length: Int, timingOut deadline: Double = .never) throws -> Data {
         try assertNotClosed()
 
         var data = Data.buffer(with: length)
@@ -134,7 +137,7 @@ public final class File {
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, deadline: Double = .never) throws -> Data {
+    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, timingOut deadline: Double = .never) throws -> Data {
         try assertNotClosed()
 
         var data = Data.buffer(with: highWaterMark)
@@ -150,7 +153,7 @@ public final class File {
         var data = Data()
 
         while true {
-            data += try read(length: 256, deadline: deadline)
+            data += try read(length: 256, timingOut: deadline)
 
             if eof {
                 break
@@ -160,7 +163,7 @@ public final class File {
         return data
     }
 
-    public func flush(deadline: Double = .never) throws {
+    public func flush(timingOut deadline: Double = .never) throws {
         try assertNotClosed()
         fileflush(file, deadline.int64milliseconds)
         try FileError.assertNoError()
@@ -200,8 +203,19 @@ public final class File {
 }
 
 extension File {
+    public func send(data: Data, timingOut deadline: Double) throws {
+        try write(data, flush: true, timingOut: deadline)
+    }
+    
+    public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
+        return try read(length: byteCount, timingOut: deadline)
+    }
+    
+}
+
+extension File {
     public func write(convertible: DataConvertible, flush: Bool = true, deadline: Double = .never) throws {
-        try write(convertible.data, flush: flush, deadline: deadline)
+        try write(convertible.data, flush: flush, timingOut: deadline)
     }
 }
 
@@ -249,7 +263,7 @@ extension File {
         return contents
     }
 
-    public static func fileExistsAt(path: String) -> (fileExists: Bool, isDirectory: Bool) {
+    public static func fileExists(at path: String) -> (fileExists: Bool, isDirectory: Bool) {
         var s = stat()
         var isDirectory = false
 
@@ -279,14 +293,14 @@ extension File {
         return (true, isDirectory)
     }
 
-    public static func createDirectoryAt(path: String, withIntermediateDirectories createIntermediates: Bool = false) throws {
+    public static func createDirectory(at path: String, withIntermediateDirectories createIntermediates: Bool = false) throws {
         if createIntermediates {
-            let (fileExists, isDirectory) = fileExistsAt(path)
-            if fileExists {
+            let (exists, isDirectory) = fileExists(at: path)
+            if exists {
                 let parent = path.dropLastPathComponent
 
-                if fileExistsAt(path).fileExists {
-                    try createDirectoryAt(parent, withIntermediateDirectories: true)
+                if fileExists(at: path).fileExists {
+                    try createDirectory(at: parent, withIntermediateDirectories: true)
                 }
                 mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
                 try FileError.assertNoError()
@@ -301,7 +315,7 @@ extension File {
         }
     }
 
-    public static func removeItemAt(path: String) throws {
+    public static func removeItem(at path: String) throws {
         if rmdir(path) == 0 {
             return
         } else if errno == ENOTDIR {
@@ -310,3 +324,12 @@ extension File {
         try FileError.assertNoError()
     }
 }
+
+private extension Double {
+    
+    var int64milliseconds: Int64 {
+        return Int64(self * 1000)
+    }
+    
+}
+
