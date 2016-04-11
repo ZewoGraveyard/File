@@ -43,14 +43,14 @@ public final class FileStream: Stream {
         self.highWaterMark = highWaterMark
     }
 
-    public func receive() throws -> Data {
+    public func receive(upTo byteCount: Int, timingOut deadline: Double = .never) throws -> Data {
         try assertNotClosed()
         do {
             if file.eof {
                 file.close()
                 return []
             } else {
-                return try file.read(lowWaterMark: lowWaterMark, highWaterMark: highWaterMark)
+                return try file.read(lowWaterMark: lowWaterMark, highWaterMark: byteCount, timingOut: deadline)
             }
         } catch FileError.connectionResetByPeer(_, let data) {
             throw StreamError.closedStream(data: data)
@@ -58,11 +58,15 @@ public final class FileStream: Stream {
             throw StreamError.closedStream(data: data)
         }
     }
+    
+    public func receive(timingOut deadline: Double = .never) throws -> Data {
+        return try receive(upTo: highWaterMark, timingOut: deadline)
+    }
 
-    public func send(data: Data) throws {
+    public func send(data: Data, timingOut deadline: Double = .never) throws {
         try assertNotClosed()
         do {
-            try file.write(data, flush: false)
+            try file.write(data, flush: false, timingOut: deadline)
         } catch FileError.connectionResetByPeer(_, let data) {
             throw StreamError.closedStream(data: data)
         } catch FileError.brokenPipe(_, let data) {
@@ -70,10 +74,10 @@ public final class FileStream: Stream {
         }
     }
 
-    public func flush() throws {
+    public func flush(timingOut deadline: Double = .never) throws {
         try assertNotClosed()
         do {
-            try file.flush()
+            try file.flush(timingOut: deadline)
         } catch FileError.connectionResetByPeer(_, let data) {
             throw StreamError.closedStream(data: data)
         } catch FileError.brokenPipe(_, let data) {
@@ -87,7 +91,7 @@ public final class FileStream: Stream {
 
     private func assertNotClosed() throws {
         if closed {
-            throw StreamError.closedStream(data: nil)
+            throw StreamError.closedStream(data: [])
         }
     }
 }
