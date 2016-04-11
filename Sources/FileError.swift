@@ -33,15 +33,15 @@ public enum FileError: ErrorProtocol {
 
     static func lastReceiveErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
         let data = Data(source.prefix(bytesProcessed))
-        return lastErrorWithData(data)
+        return lastError(with: data)
     }
 
     static func lastSendErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
         let data = Data(source.suffix(bytesProcessed))
-        return lastErrorWithData(data)
+        return lastError(with: data)
     }
 
-    static func lastErrorWithData(data: Data) -> FileError {
+    static func lastError(with data: Data) -> FileError {
         switch errno {
         case EPIPE:
             return .brokenPipe(description: lastErrorDescription, data: data)
@@ -65,13 +65,13 @@ public enum FileError: ErrorProtocol {
     static var lastError: FileError {
         switch errno {
         case EPIPE:
-            return .brokenPipe(description: lastErrorDescription, data: nil)
+            return .brokenPipe(description: lastErrorDescription, data: [])
         case ECONNRESET:
-            return .connectionResetByPeer(description: lastErrorDescription, data: nil)
+            return .connectionResetByPeer(description: lastErrorDescription, data: [])
         case ENOBUFS:
-            return .noBufferSpaceAvailabe(description: lastErrorDescription, data: nil)
+            return .noBufferSpaceAvailabe(description: lastErrorDescription, data: [])
         case ETIMEDOUT:
-            return .operationTimedOut(description: lastErrorDescription, data: nil)
+            return .operationTimedOut(description: lastErrorDescription, data: [])
         case EEXIST:
             return .fileExists(description: lastErrorDescription)
         default:
