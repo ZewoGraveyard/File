@@ -108,11 +108,11 @@ public final class File {
         }
 	}
 
-    public func write(data: Data, flush: Bool = true, deadline: Deadline = never) throws {
+    public func write(data: Data, flush: Bool = true, deadline: Double = .never) throws {
         try assertNotClosed()
 
         let bytesProcessed = data.withUnsafeBufferPointer {
-            filewrite(file, $0.baseAddress, $0.count, deadline)
+            filewrite(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
         try FileError.assertNoSendErrorWithData(data, bytesProcessed: bytesProcessed)
@@ -122,31 +122,31 @@ public final class File {
         }
 	}
 
-    public func read(length length: Int, deadline: Deadline = never) throws -> Data {
+    public func read(length length: Int, deadline: Double = .never) throws -> Data {
         try assertNotClosed()
 
-        var data = Data.bufferWithSize(length)
+        var data = Data.buffer(with: length)
         let bytesProcessed = data.withUnsafeMutableBufferPointer {
-            fileread(file, $0.baseAddress, $0.count, deadline)
+            fileread(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
         try FileError.assertNoReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, deadline: Deadline = never) throws -> Data {
+    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, deadline: Double = .never) throws -> Data {
         try assertNotClosed()
 
-        var data = Data.bufferWithSize(highWaterMark)
+        var data = Data.buffer(with: highWaterMark)
         let bytesProcessed = data.withUnsafeMutableBufferPointer {
-            filereadlh(file, $0.baseAddress, lowWaterMark, highWaterMark, deadline)
+            filereadlh(file, $0.baseAddress, lowWaterMark, highWaterMark, deadline.int64milliseconds)
         }
 
         try FileError.assertNoReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(deadline deadline: Deadline = never) throws -> Data {
+    public func read(deadline deadline: Double = .never) throws -> Data {
         var data = Data()
 
         while true {
@@ -160,9 +160,9 @@ public final class File {
         return data
     }
 
-    public func flush(deadline: Deadline = never) throws {
+    public func flush(deadline: Double = .never) throws {
         try assertNotClosed()
-        fileflush(file, deadline)
+        fileflush(file, deadline.int64milliseconds)
         try FileError.assertNoError()
     }
 
@@ -200,7 +200,7 @@ public final class File {
 }
 
 extension File {
-    public func write(convertible: DataConvertible, flush: Bool = true, deadline: Deadline = never) throws {
+    public func write(convertible: DataConvertible, flush: Bool = true, deadline: Double = .never) throws {
         try write(convertible.data, flush: flush, deadline: deadline)
     }
 }
