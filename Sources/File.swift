@@ -24,7 +24,6 @@
 
 import CLibvenice
 @_exported import Venice
-@_exported import Data
 @_exported import String
 
 public final class File: Stream {
@@ -55,7 +54,7 @@ public final class File: Stream {
     private var file: mfile
     public private(set) var closed = false
     public private(set) var path: String? = nil
-    
+
     public func tell() throws -> Int {
         let position = Int(filetell(file))
         try FileError.assertNoError()
@@ -107,7 +106,7 @@ public final class File: Stream {
             fileclose(file)
         }
 	}
-    
+
 }
 
 extension File {
@@ -206,11 +205,11 @@ extension File {
     public func send(data: Data, timingOut deadline: Double) throws {
         try write(data, flush: true, timingOut: deadline)
     }
-    
+
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
         return try read(length: byteCount, timingOut: deadline)
     }
-    
+
 }
 
 extension File {
@@ -263,7 +262,7 @@ extension File {
         return contents
     }
 
-    public static func fileExists(at path: String) -> (fileExists: Bool, isDirectory: Bool) {
+    public static func exists(at path: String) -> (exists: Bool, isDirectory: Bool) {
         var s = stat()
         var isDirectory = false
 
@@ -295,11 +294,11 @@ extension File {
 
     public static func createDirectory(at path: String, withIntermediateDirectories createIntermediates: Bool = false) throws {
         if createIntermediates {
-            let (exists, isDirectory) = fileExists(at: path)
-            if exists {
+            let (fileExists, isDirectory) = exists(at: path)
+            if fileExists {
                 let parent = path.dropLastPathComponent
 
-                if fileExists(at: path).fileExists {
+                if exists(at: path).exists {
                     try createDirectory(at: parent, withIntermediateDirectories: true)
                 }
                 mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
@@ -324,12 +323,3 @@ extension File {
         try FileError.assertNoError()
     }
 }
-
-private extension Double {
-    
-    var int64milliseconds: Int64 {
-        return Int64(self * 1000)
-    }
-    
-}
-

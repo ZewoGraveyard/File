@@ -28,7 +28,7 @@ import File
 class FileTests: XCTestCase {
     func testReadWrite() {
         do {
-            let file = try File(path: "/tmp/zewo-test-file", mode: .TruncateReadWrite)
+            let file = try File(path: "/tmp/zewo-test-file", mode: .truncateReadWrite)
             try file.write("abc")
             XCTAssert(try file.tell() == 3)
             try file.seek(0)
@@ -52,7 +52,7 @@ class FileTests: XCTestCase {
 
     func testReadAllFile() {
         do {
-            let file = try File(path: "/tmp/zewo-test-file", mode: .TruncateReadWrite)
+            let file = try File(path: "/tmp/zewo-test-file", mode: .truncateReadWrite)
             let word = "hello"
             try file.write(word)
             try file.seek(0)
