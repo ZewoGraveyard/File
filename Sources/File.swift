@@ -227,7 +227,7 @@ extension File {
         return String(cString: workingDirectory)
     }
 
-    public static func contentsOfDirectoryAt(path: String) throws -> [String] {
+    public static func contentsOfDirectory(at path: String) throws -> [String] {
         var contents: [String] = []
 
         let dir = opendir(path)
