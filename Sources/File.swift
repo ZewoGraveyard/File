@@ -80,11 +80,11 @@ public final class File: Stream {
             return nil
         }
 
-        guard let fileExtension = path.split(by: ".").last else {
+        guard let fileExtension = path.split(separator: ".").last else {
             return nil
         }
 
-        if fileExtension.split(by: "/").count > 1 {
+        if fileExtension.split(separator: "/").count > 1 {
             return nil
         }
 
