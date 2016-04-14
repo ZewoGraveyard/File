@@ -91,13 +91,13 @@ public enum FileError: ErrorProtocol {
 
     static func assertNoReceiveErrorWithData(data: Data, bytesProcessed: Int) throws {
         if errno != 0 {
-            throw FileError.lastReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
+            throw FileError.lastReceiveErrorWithData(source: data, bytesProcessed: bytesProcessed)
         }
     }
 
     static func assertNoSendErrorWithData(data: Data, bytesProcessed: Int) throws {
         if errno != 0 {
-            throw FileError.lastSendErrorWithData(data, bytesProcessed: bytesProcessed)
+            throw FileError.lastSendErrorWithData(source: data, bytesProcessed: bytesProcessed)
         }
     }
 }

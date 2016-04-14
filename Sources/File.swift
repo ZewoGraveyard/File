@@ -51,7 +51,7 @@ public final class File: Stream {
         }
 	}
 
-    private var file: mfile
+    private var file: mfile?
     public private(set) var closed = false
     public private(set) var path: String? = nil
 
@@ -80,11 +80,11 @@ public final class File: Stream {
             return nil
         }
 
-        guard let fileExtension = path.split(".").last else {
+        guard let fileExtension = path.split(by: ".").last else {
             return nil
         }
 
-        if fileExtension.split("/").count > 1 {
+        if fileExtension.split(by: "/").count > 1 {
             return nil
         }
 
@@ -121,14 +121,14 @@ extension File {
             filewrite(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoSendErrorWithData(data, bytesProcessed: bytesProcessed)
+        try FileError.assertNoSendErrorWithData(data: data, bytesProcessed: bytesProcessed)
 
         if flush {
             try self.flush(timingOut: deadline)
         }
 	}
 
-    public func read(length length: Int, timingOut deadline: Double = .never) throws -> Data {
+    public func read(length: Int, timingOut deadline: Double = .never) throws -> Data {
         try assertNotClosed()
 
         var data = Data.buffer(with: length)
@@ -136,11 +136,11 @@ extension File {
             fileread(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
+        try FileError.assertNoReceiveErrorWithData(data: data, bytesProcessed: bytesProcessed)
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(lowWaterMark lowWaterMark: Int, highWaterMark: Int, timingOut deadline: Double = .never) throws -> Data {
+    public func read(lowWaterMark: Int, highWaterMark: Int, timingOut deadline: Double = .never) throws -> Data {
         try assertNotClosed()
 
         var data = Data.buffer(with: highWaterMark)
@@ -148,11 +148,11 @@ extension File {
             filereadlh(file, $0.baseAddress, lowWaterMark, highWaterMark, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoReceiveErrorWithData(data, bytesProcessed: bytesProcessed)
+        try FileError.assertNoReceiveErrorWithData(data: data, bytesProcessed: bytesProcessed)
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(deadline deadline: Double = .never) throws -> Data {
+    public func read(deadline: Double = .never) throws -> Data {
         var data = Data()
 
         while true {
@@ -206,8 +206,8 @@ extension File {
 }
 
 extension File {
-    public func send(data: Data, timingOut deadline: Double) throws {
-        try write(data, flush: true, timingOut: deadline)
+    public func send(_ data: Data, timingOut deadline: Double) throws {
+        try write(data: data, flush: true, timingOut: deadline)
     }
 
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
@@ -218,7 +218,7 @@ extension File {
 
 extension File {
     public func write(convertible: DataConvertible, flush: Bool = true, deadline: Double = .never) throws {
-        try write(convertible.data, flush: flush, timingOut: deadline)
+        try write(data: convertible.data, flush: flush, timingOut: deadline)
     }
 }
 
@@ -246,10 +246,10 @@ extension File {
 
         let excludeNames = [".", ".."]
 
-        var entry: UnsafeMutablePointer<dirent> = readdir(dir)
+        let entry: UnsafeMutablePointer<dirent>? = readdir(dir)
 
-        while entry != nil {
-            if let entryName = withUnsafePointer(&entry.pointee.d_name, { (ptr) -> String? in
+        while var entry = entry {
+            if let entryName = withUnsafeMutablePointer(&entry.pointee.d_name, { (ptr) -> String? in
                 let int8Ptr = unsafeBitCast(ptr, to: UnsafePointer<Int8>.self)
                 return String(validatingUTF8: int8Ptr)
             }) {
