@@ -114,14 +114,14 @@ public final class File: Stream {
 }
 
 extension File {
-    public func write(data: Data, flush: Bool = true, timingOut deadline: Double = .never) throws {
+    public func write(_ data: Data, flush: Bool = true, timingOut deadline: Double = .never) throws {
         try assertNotClosed()
 
         let bytesProcessed = data.withUnsafeBufferPointer {
             filewrite(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoSendErrorWithData(data: data, bytesProcessed: bytesProcessed)
+        try FileError.assertNoSendError(with: data, bytesProcessed: bytesProcessed)
 
         if flush {
             try self.flush(timingOut: deadline)
@@ -136,7 +136,7 @@ extension File {
             fileread(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoReceiveErrorWithData(data: data, bytesProcessed: bytesProcessed)
+        try FileError.assertNoReceiveError(with: data, bytesProcessed: bytesProcessed)
         return Data(data.prefix(bytesProcessed))
     }
 
@@ -148,11 +148,11 @@ extension File {
             filereadlh(file, $0.baseAddress, lowWaterMark, highWaterMark, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoReceiveErrorWithData(data: data, bytesProcessed: bytesProcessed)
+        try FileError.assertNoReceiveError(with: data, bytesProcessed: bytesProcessed)
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(deadline: Double = .never) throws -> Data {
+    public func read(_ deadline: Double = .never) throws -> Data {
         var data = Data()
 
         while true {
@@ -172,7 +172,7 @@ extension File {
         try FileError.assertNoError()
     }
 
-    public func attach(fileDescriptor: FileDescriptor) throws {
+    public func attach(_ fileDescriptor: FileDescriptor) throws {
         if !closed {
             close()
         }
@@ -188,14 +188,10 @@ extension File {
         return filedetach(file)
     }
 
-    public func close() -> Bool {
-        if closed {
-            return false
-        }
-
+    public func close() {
+        guard !closed else { return }
         closed = true
         fileclose(file)
-        return true
     }
 
     func assertNotClosed() throws {
@@ -207,7 +203,7 @@ extension File {
 
 extension File {
     public func send(_ data: Data, timingOut deadline: Double) throws {
-        try write(data: data, flush: true, timingOut: deadline)
+        try write(data, flush: true, timingOut: deadline)
     }
 
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
@@ -217,8 +213,8 @@ extension File {
 }
 
 extension File {
-    public func write(convertible: DataConvertible, flush: Bool = true, deadline: Double = .never) throws {
-        try write(data: convertible.data, flush: flush, timingOut: deadline)
+    public func write(_ convertible: DataConvertible, flush: Bool = true, deadline: Double = .never) throws {
+        try write(convertible.data, flush: flush, timingOut: deadline)
     }
 }
 

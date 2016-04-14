@@ -31,12 +31,12 @@ public enum FileError: ErrorProtocol {
     case closedFile(description: String)
     case fileExists(description: String)
 
-    static func lastReceiveErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
+    static func lastReceiveError(with source: Data, bytesProcessed: Int) -> FileError {
         let data = Data(source.prefix(bytesProcessed))
         return lastError(with: data)
     }
 
-    static func lastSendErrorWithData(source: Data, bytesProcessed: Int) -> FileError {
+    static func lastSendError(with source: Data, bytesProcessed: Int) -> FileError {
         let data = Data(source.suffix(bytesProcessed))
         return lastError(with: data)
     }
@@ -89,15 +89,15 @@ public enum FileError: ErrorProtocol {
         }
     }
 
-    static func assertNoReceiveErrorWithData(data: Data, bytesProcessed: Int) throws {
+    static func assertNoReceiveError(with data: Data, bytesProcessed: Int) throws {
         if errno != 0 {
-            throw FileError.lastReceiveErrorWithData(source: data, bytesProcessed: bytesProcessed)
+            throw FileError.lastReceiveError(with: data, bytesProcessed: bytesProcessed)
         }
     }
 
-    static func assertNoSendErrorWithData(data: Data, bytesProcessed: Int) throws {
+    static func assertNoSendError(with data: Data, bytesProcessed: Int) throws {
         if errno != 0 {
-            throw FileError.lastSendErrorWithData(source: data, bytesProcessed: bytesProcessed)
+            throw FileError.lastSendError(with: data, bytesProcessed: bytesProcessed)
         }
     }
 }
