@@ -188,8 +188,8 @@ extension File {
         return filedetach(file)
     }
 
-    public func close() {
-        guard !closed else { return }
+    public func close() throws {
+        guard !closed else { throw ClosableError.alreadyClosed }
         closed = true
         fileclose(file)
     }
