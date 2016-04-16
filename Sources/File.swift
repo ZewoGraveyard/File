@@ -174,7 +174,7 @@ extension File {
 
     public func attach(_ fileDescriptor: FileDescriptor) throws {
         if !closed {
-            close()
+            try close()
         }
 
         file = fileattach(fileDescriptor)
