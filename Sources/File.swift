@@ -152,7 +152,7 @@ extension File {
         return Data(data.prefix(bytesProcessed))
     }
 
-    public func read(_ deadline: Double = .never) throws -> Data {
+    public func read(timingOut deadline: Double = .never) throws -> Data {
         var data = Data()
 
         while true {
