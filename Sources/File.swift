@@ -187,7 +187,7 @@ extension File {
         return receivedData
     }
 
-    public func readAll(timingOut deadline: Double = .never) throws -> Data {
+    public func readAllBytes(timingOut deadline: Double = .never) throws -> Data {
         var data = Data()
 
         while true {
