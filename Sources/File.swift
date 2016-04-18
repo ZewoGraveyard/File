@@ -25,8 +25,23 @@
 import CLibvenice
 @_exported import Venice
 @_exported import String
+@_exported import POSIX
 
-public final class File: Stream {
+public enum FileError: ErrorProtocol {
+    case failedToSendCompletely(remaining: Data)
+    case failedToReceiveCompletely(received: Data)
+}
+
+extension FileError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case failedToSendCompletely: return "Failed to send completely"
+        case failedToReceiveCompletely: return "Failed to receive completely"
+        }
+    }
+}
+
+public final class File {
 	public enum Mode {
 		case read
         case createWrite
@@ -57,19 +72,19 @@ public final class File: Stream {
 
     public func tell() throws -> Int {
         let position = Int(filetell(file))
-        try FileError.assertNoError()
+        try ensureLastOperationSucceeded()
         return position
     }
 
     public func seek(position: Int) throws -> Int {
         let position = Int(fileseek(file, off_t(position)))
-        try FileError.assertNoError()
+        try ensureLastOperationSucceeded()
         return position
     }
 
-    public var length: Int {
-        return Int(filesize(self.file))
-    }
+//    public var length: Int {
+//        return Int(filesize(self.file))
+//    }
 
     public var eof: Bool {
         return fileeof(file) != 0
@@ -91,72 +106,92 @@ public final class File: Stream {
         return fileExtension
     }()
 
-    init(file: mfile) throws {
+    init(file: mfile) {
         self.file = file
-        try FileError.assertNoError()
     }
 
 	public convenience init(path: String, mode: Mode = .read) throws {
-        try self.init(file: fileopen(path, mode.value, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))
+        let file = fileopen(path, mode.value, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+        try ensureLastOperationSucceeded()
+        self.init(file: file)
         self.path = path
 	}
 
     public convenience init(fileDescriptor: FileDescriptor) throws {
-        try self.init(file: fileattach(fileDescriptor))
+        let file = fileattach(fileDescriptor)
+        try ensureLastOperationSucceeded()
+        self.init(file: file)
     }
 
 	deinit {
-        if !closed && file != nil {
+        if let file = file where !closed {
             fileclose(file)
         }
 	}
-
 }
 
 extension File {
-    public func write(_ data: Data, flush: Bool = true, timingOut deadline: Double = .never) throws {
-        try assertNotClosed()
+    public func write(_ data: Data, flushing flush: Bool = true, timingOut deadline: Double = .never) throws {
+        try ensureFileIsOpen()
 
-        let bytesProcessed = data.withUnsafeBufferPointer {
+        let remaining = data.withUnsafeBufferPointer {
             filewrite(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoSendError(with: data, bytesProcessed: bytesProcessed)
+        do {
+            try ensureLastOperationSucceeded()
+        } catch {
+            throw FileError.failedToSendCompletely(remaining: Data(data.suffix(remaining)))
+        }
 
         if flush {
             try self.flush(timingOut: deadline)
         }
 	}
 
-    public func read(length: Int, timingOut deadline: Double = .never) throws -> Data {
-        try assertNotClosed()
+    public func read(upTo byteCount: Int, timingOut deadline: Double = .never) throws -> Data {
+        try ensureFileIsOpen()
 
-        var data = Data.buffer(with: length)
-        let bytesProcessed = data.withUnsafeMutableBufferPointer {
+        var data = Data.buffer(with: byteCount)
+        let received = data.withUnsafeMutableBufferPointer {
+            filereadlh(file, $0.baseAddress, 1, $0.count, deadline.int64milliseconds)
+        }
+
+        let receivedData = Data(data.prefix(received))
+
+        do {
+            try ensureLastOperationSucceeded()
+        } catch {
+            throw FileError.failedToReceiveCompletely(received: receivedData)
+        }
+
+        return receivedData
+    }
+
+    public func read(_ byteCount: Int, timingOut deadline: Double = .never) throws -> Data {
+        try ensureFileIsOpen()
+
+        var data = Data.buffer(with: byteCount)
+        let received = data.withUnsafeMutableBufferPointer {
             fileread(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
         }
 
-        try FileError.assertNoReceiveError(with: data, bytesProcessed: bytesProcessed)
-        return Data(data.prefix(bytesProcessed))
-    }
+        let receivedData = Data(data.prefix(received))
 
-    public func read(lowWaterMark: Int, highWaterMark: Int, timingOut deadline: Double = .never) throws -> Data {
-        try assertNotClosed()
-
-        var data = Data.buffer(with: highWaterMark)
-        let bytesProcessed = data.withUnsafeMutableBufferPointer {
-            filereadlh(file, $0.baseAddress, lowWaterMark, highWaterMark, deadline.int64milliseconds)
+        do {
+            try ensureLastOperationSucceeded()
+        } catch {
+            throw FileError.failedToReceiveCompletely(received: receivedData)
         }
 
-        try FileError.assertNoReceiveError(with: data, bytesProcessed: bytesProcessed)
-        return Data(data.prefix(bytesProcessed))
+        return receivedData
     }
 
-    public func read(timingOut deadline: Double = .never) throws -> Data {
+    public func readAll(timingOut deadline: Double = .never) throws -> Data {
         var data = Data()
 
         while true {
-            data += try read(length: 256, timingOut: deadline)
+            data += try read(upTo: 2048, timingOut: deadline)
 
             if eof {
                 break
@@ -167,25 +202,9 @@ extension File {
     }
 
     public func flush(timingOut deadline: Double = .never) throws {
-        try assertNotClosed()
+        try ensureFileIsOpen()
         fileflush(file, deadline.int64milliseconds)
-        try FileError.assertNoError()
-    }
-
-    public func attach(_ fileDescriptor: FileDescriptor) throws {
-        if !closed {
-            try close()
-        }
-
-        file = fileattach(fileDescriptor)
-        try FileError.assertNoError()
-        closed = false
-    }
-
-    public func detach() throws -> FileDescriptor {
-        try assertNotClosed()
-        closed = true
-        return filedetach(file)
+        try ensureLastOperationSucceeded()
     }
 
     public func close() throws {
@@ -194,27 +213,22 @@ extension File {
         fileclose(file)
     }
 
-    func assertNotClosed() throws {
+    private func ensureFileIsOpen() throws {
         if closed {
-            throw FileError.closedFileError
+            throw StreamError.closedStream(data: [])
         }
     }
 }
 
 extension File {
-    public func send(_ data: Data, timingOut deadline: Double) throws {
-        try write(data, flush: true, timingOut: deadline)
+    public var stream: Stream {
+        return FileStream(file: self)
     }
-
-    public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        return try read(length: byteCount, timingOut: deadline)
-    }
-
 }
 
 extension File {
-    public func write(_ convertible: DataConvertible, flush: Bool = true, deadline: Double = .never) throws {
-        try write(convertible.data, flush: flush, timingOut: deadline)
+    public func write(_ convertible: DataConvertible, flushing flush: Bool = true, deadline: Double = .never) throws {
+        try write(convertible.data, flushing: flush, timingOut: deadline)
     }
 }
 
@@ -223,7 +237,7 @@ extension File {
         var buffer = String.buffer(size: Int(MAXNAMLEN))
         errno = 0
         let workingDirectory = getcwd(&buffer, buffer.count)
-        try FileError.assertNoError()
+        try ensureLastOperationSucceeded()
         return String(cString: workingDirectory)
     }
 
@@ -231,10 +245,7 @@ extension File {
         var contents: [String] = []
 
         let dir = opendir(path)
-
-        if dir == nil {
-            throw FileError.unknown(description: "Could not open directory at \(path)")
-        }
+        try ensureLastOperationSucceeded()
 
         defer {
             closedir(dir)
@@ -302,15 +313,15 @@ extension File {
                     try createDirectory(at: parent, withIntermediateDirectories: true)
                 }
                 mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
-                try FileError.assertNoError()
+                try ensureLastOperationSucceeded()
             } else if isDirectory {
                 return
             } else {
-                throw FileError.fileExists(description: "File exists")
+                throw SystemError.fileExists
             }
         } else {
             mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
-            try FileError.assertNoError()
+            try ensureLastOperationSucceeded()
         }
     }
 
@@ -320,6 +331,6 @@ extension File {
         } else if errno == ENOTDIR {
             unlink(path)
         }
-        try FileError.assertNoError()
+        try ensureLastOperationSucceeded()
     }
 }
