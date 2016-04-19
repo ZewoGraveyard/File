@@ -215,7 +215,7 @@ extension File {
 
     private func ensureFileIsOpen() throws {
         if closed {
-            throw StreamError.closedStream(data: [])
+            throw StreamError.closedStream
         }
     }
 }
