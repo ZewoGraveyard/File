@@ -76,15 +76,15 @@ public final class File {
         return position
     }
 
-    public func seek(position: Int) throws -> Int {
+    public func seek(to position: Int) throws -> Int {
         let position = Int(fileseek(file, off_t(position)))
         try ensureLastOperationSucceeded()
         return position
     }
 
-//    public var length: Int {
-//        return Int(filesize(self.file))
-//    }
+//   public var length: Int {
+//       return Int(filesize(self.file))
+//   }
 
     public var eof: Bool {
         return fileeof(file) != 0
