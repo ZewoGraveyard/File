@@ -82,9 +82,9 @@ public final class File {
         return position
     }
 
-//    public var length: Int {
-//        return Int(filesize(self.file))
-//    }
+//   public var length: Int {
+//       return Int(filesize(self.file))
+//   }
 
     public var eof: Bool {
         return fileeof(file) != 0
