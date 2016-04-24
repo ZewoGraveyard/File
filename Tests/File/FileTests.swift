@@ -83,30 +83,42 @@ class FileTests: XCTestCase {
         }
     }
 
-    func testRandom() {
-        do {
-            let file = try File(path: "/dev/random")
-            let count = 4096
-            let length = 256
+    #if os(OSX)
+        func testRandom() {
+            do {
+                let file = try File(path: "/dev/random")
+                let count = 4096
+                let length = 256
 
-            for _ in 0 ..< count {
-                let data = try file.read(length)
-                XCTAssert(data.count == length)
+                for _ in 0 ..< count {
+                    let data = try file.read(length)
+                    XCTAssert(data.count == length)
+                }
+            } catch {
+                XCTFail()
             }
-        } catch {
-            XCTFail()
         }
-    }
+    #endif
 }
 
 extension FileTests {
     static var allTests : [(String, FileTests -> () throws -> Void)] {
+        #if os(OSX)
         return [
-           ("testReadWrite", testReadWrite),
-           ("testReadAllFile", testReadAllFile),
-//           ("testFileSize", testFileSize),
-           ("testZero", testZero),
-           ("testRandom", testRandom),
+            ("testReadWrite", testReadWrite),
+            ("testReadAllFile", testReadAllFile),
+            // ("testFileSize", testFileSize),
+            ("testZero", testZero),
+            ("testRandom", testRandom),
         ]
+        #else
+        return [
+            ("testReadWrite", testReadWrite),
+            ("testReadAllFile", testReadAllFile),
+            // ("testFileSize", testFileSize),
+            ("testZero", testZero),
+            // ("testRandom", testRandom),
+        ]
+        #endif
     }
 }
