@@ -248,12 +248,12 @@ extension File {
         try ensureLastOperationSucceeded()
 
         defer {
-            closedir(dir)
+            closedir(dir!)
         }
 
         let excludeNames = [".", ".."]
 
-        let entry: UnsafeMutablePointer<dirent>? = readdir(dir)
+        let entry: UnsafeMutablePointer<dirent>? = readdir(dir!)
 
         while var entry = entry {
             if let entryName = withUnsafeMutablePointer(&entry.pointee.d_name, { (ptr) -> String? in
@@ -267,7 +267,7 @@ extension File {
                 }
             }
 
-            entry = readdir(dir)
+            entry = readdir(dir!)
         }
 
         return contents
