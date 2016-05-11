@@ -113,14 +113,14 @@ public final class File {
 	public convenience init(path: String, mode: Mode = .read) throws {
         let file = fileopen(path, mode.value, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
         try ensureLastOperationSucceeded()
-        self.init(file: file)
+        self.init(file: file!)
         self.path = path
 	}
 
     public convenience init(fileDescriptor: FileDescriptor) throws {
         let file = fileattach(fileDescriptor)
         try ensureLastOperationSucceeded()
-        self.init(file: file)
+        self.init(file: file!)
     }
 
 	deinit {
@@ -238,7 +238,7 @@ extension File {
         errno = 0
         let workingDirectory = getcwd(&buffer, buffer.count)
         try ensureLastOperationSucceeded()
-        return String(cString: workingDirectory)
+        return String(cString: workingDirectory!)
     }
 
     public static func contentsOfDirectory(at path: String) throws -> [String] {
@@ -248,12 +248,12 @@ extension File {
         try ensureLastOperationSucceeded()
 
         defer {
-            closedir(dir)
+            closedir(dir!)
         }
 
         let excludeNames = [".", ".."]
 
-        let entry: UnsafeMutablePointer<dirent>? = readdir(dir)
+        let entry: UnsafeMutablePointer<dirent>? = readdir(dir!)
 
         while var entry = entry {
             if let entryName = withUnsafeMutablePointer(&entry.pointee.d_name, { (ptr) -> String? in
@@ -267,7 +267,7 @@ extension File {
                 }
             }
 
-            entry = readdir(dir)
+            entry = readdir(dir!)
         }
 
         return contents

@@ -102,7 +102,7 @@ class FileTests: XCTestCase {
 }
 
 extension FileTests {
-    static var allTests : [(String, FileTests -> () throws -> Void)] {
+    static var allTests : [(String, (FileTests) -> () throws -> Void)] {
         #if os(OSX)
         return [
             ("testReadWrite", testReadWrite),
