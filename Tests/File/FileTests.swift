@@ -38,6 +38,17 @@ class FileTests: XCTestCase {
             XCTFail()
         }
     }
+    func testDelete() {
+        do {
+            let file = try File(path: "/tmp/zewo-test-file", mode: .truncateReadWrite)
+            let word = "hello"
+            try file.write(word)
+            try file.close()
+            try File.removeItem(at:"/tmp/zewo-test-file")
+        } catch {
+            XCTFail()
+        }
+    }
 
 //    func testFileSize() {
 //        do {
@@ -110,6 +121,7 @@ extension FileTests {
             // ("testFileSize", testFileSize),
             ("testZero", testZero),
             ("testRandom", testRandom),
+            ("testDelete", testDelete),
         ]
         #else
         return [
@@ -118,6 +130,7 @@ extension FileTests {
             // ("testFileSize", testFileSize),
             ("testZero", testZero),
             // ("testRandom", testRandom),
+            ("testDelete", testDelete),
         ]
         #endif
     }

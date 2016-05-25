@@ -329,6 +329,7 @@ extension File {
         if rmdir(path) == 0 {
             return
         } else if errno == ENOTDIR {
+            errno = 0
             unlink(path)
         }
         try ensureLastOperationSucceeded()
