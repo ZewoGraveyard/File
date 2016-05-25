@@ -253,21 +253,18 @@ extension File {
 
         let excludeNames = [".", ".."]
 
-        let entry: UnsafeMutablePointer<dirent>? = readdir(dir!)
+        while let file = readdir(dir!) {
 
-        while var entry = entry {
+            let entry: UnsafeMutablePointer<dirent> = file
+
             if let entryName = withUnsafeMutablePointer(&entry.pointee.d_name, { (ptr) -> String? in
-                let int8Ptr = unsafeBitCast(ptr, to: UnsafePointer<Int8>.self)
-                return String(validatingUTF8: int8Ptr)
+                let entryPointer = unsafeBitCast(ptr, to: UnsafePointer<CChar>.self)
+                return String(validatingUTF8: entryPointer)
             }) {
-
-                // TODO: `entryName` should be limited in length to `entry.pointee.d_namlen`.
                 if !excludeNames.contains(entryName) {
                     contents.append(entryName)
                 }
             }
-
-            entry = readdir(dir!)
         }
 
         return contents
