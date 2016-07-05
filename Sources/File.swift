@@ -291,8 +291,6 @@ extension File {
                 if (s.st_mode & S_ISVTX) == S_ISVTX {
                     return (true, isDirectory)
                 }
-                // chase the link; too bad if it is a slink to /Net/foo
-                stat(path, &s) >= 0
             }
         } else {
             return (false, isDirectory)
