@@ -307,16 +307,18 @@ extension File {
                 if exists(at: path).exists {
                     try createDirectory(at: parent, withIntermediateDirectories: true)
                 }
-                mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
-                try ensureLastOperationSucceeded()
+                if mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) == -1 {
+                    try ensureLastOperationSucceeded()
+                }
             } else if isDirectory {
                 return
             } else {
                 throw SystemError.fileExists
             }
         } else {
-            mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
-            try ensureLastOperationSucceeded()
+            if mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) == -1 {
+                try ensureLastOperationSucceeded()
+            }
         }
     }
 
