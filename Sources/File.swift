@@ -306,22 +306,22 @@ extension File {
     public static func createDirectory(at path: String, withIntermediateDirectories createIntermediates: Bool = false) throws {
         if createIntermediates {
             let (fileExists, isDirectory) = exists(at: path)
-            if fileExists {
+            if !fileExists {
                 let parent = path.dropLastPathComponent
 
-                if exists(at: path).exists {
+                if !exists(at: parent).exists {
                     try createDirectory(at: parent, withIntermediateDirectories: true)
                 }
-                mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
-                try ensureLastOperationSucceeded()
+                try createDirectory(at: path)
             } else if isDirectory {
                 return
             } else {
                 throw SystemError.fileExists
             }
         } else {
-            mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
-            try ensureLastOperationSucceeded()
+            if mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) == -1 {
+                try ensureLastOperationSucceeded()
+            }
         }
     }
 
