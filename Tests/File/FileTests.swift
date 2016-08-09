@@ -99,6 +99,56 @@ class FileTests: XCTestCase {
             }
         }
     #endif
+    
+	
+    func testStaticMethods() throws {
+        let filePath = "/tmp/zewo-test-file"
+        let baseDirectoryPath = "/tmp/zewo"
+        let directoryPath = baseDirectoryPath + "/test/dir/"
+        
+        let file = try File(path: filePath, mode: .truncateWrite)
+        
+        XCTAssertTrue(File.exists(at: filePath).exists)
+        XCTAssertFalse(File.exists(at: filePath).isDirectory)
+        
+        let word = "hello"
+        try file.write(word)
+        try file.close()
+        try File.removeItem(at: filePath)
+        
+        XCTAssertThrowsError(try File.removeItem(at: filePath))
+        XCTAssertFalse(File.exists(at: filePath).exists)
+        XCTAssertFalse(File.exists(at: filePath).isDirectory)
+
+        try File.createDirectory(at: baseDirectoryPath)
+        
+        XCTAssertThrowsError(try File.createDirectory(at: baseDirectoryPath))
+        XCTAssertEqual(try File.contentsOfDirectory(at: baseDirectoryPath), [])
+        XCTAssertTrue(File.exists(at: baseDirectoryPath).exists)
+        XCTAssertTrue(File.exists(at: baseDirectoryPath).isDirectory)
+        
+        try File.removeItem(at: baseDirectoryPath)
+        
+        XCTAssertThrowsError(try File.removeItem(at: baseDirectoryPath))
+        XCTAssertThrowsError(try File.contentsOfDirectory(
+            at: baseDirectoryPath))
+        XCTAssertFalse(File.exists(at: baseDirectoryPath).exists)
+        XCTAssertFalse(File.exists(at: baseDirectoryPath).isDirectory)
+        
+        try File.createDirectory(at: directoryPath,
+                                 withIntermediateDirectories: true)
+        
+        XCTAssertEqual(try File.contentsOfDirectory(at: baseDirectoryPath),
+                       ["test"])
+        XCTAssertTrue(File.exists(at: directoryPath).exists)
+        XCTAssertTrue(File.exists(at: directoryPath).isDirectory)
+        
+        try File.removeItem(at: baseDirectoryPath)
+        
+        XCTAssertFalse(File.exists(at: baseDirectoryPath).exists)
+        XCTAssertFalse(File.exists(at: baseDirectoryPath).isDirectory)
+    }
+	
 }
 
 extension FileTests {
@@ -110,6 +160,7 @@ extension FileTests {
             // ("testFileSize", testFileSize),
             ("testZero", testZero),
             ("testRandom", testRandom),
+            ("testStaticMethods", testStaticMethods),
         ]
         #else
         return [
@@ -118,6 +169,7 @@ extension FileTests {
             // ("testFileSize", testFileSize),
             ("testZero", testZero),
             // ("testRandom", testRandom),
+            ("testStaticMethods", testStaticMethods),
         ]
         #endif
     }
