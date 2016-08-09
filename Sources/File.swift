@@ -328,8 +328,9 @@ extension File {
     public static func removeItem(at path: String) throws {
         if rmdir(path) == 0 {
             return
-        } else if errno == ENOTDIR {
-            unlink(path)
+        }
+        if errno == ENOTDIR && unlink(path) == 0 {
+            return
         }
         try ensureLastOperationSucceeded()
     }
