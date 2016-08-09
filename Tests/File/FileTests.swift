@@ -143,6 +143,8 @@ class FileTests: XCTestCase {
         XCTAssertTrue(File.exists(at: directoryPath).exists)
         XCTAssertTrue(File.exists(at: directoryPath).isDirectory)
         
+        try File.removeItem(at: directoryPath)
+        try File.removeItem(at: directoryPath.dropLastPathComponent)
         try File.removeItem(at: baseDirectoryPath)
         
         XCTAssertFalse(File.exists(at: baseDirectoryPath).exists)
