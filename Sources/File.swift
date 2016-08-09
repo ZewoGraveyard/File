@@ -245,7 +245,9 @@ extension File {
         var contents: [String] = []
 
         let dir = opendir(path)
-        try ensureLastOperationSucceeded()
+        if dir == nil {
+            try ensureLastOperationSucceeded()
+        }
 
         defer {
             closedir(dir!)
