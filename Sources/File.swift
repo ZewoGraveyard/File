@@ -255,7 +255,7 @@ extension File {
 
         let excludeNames = [".", ".."]
         
-        while let file = readdir(dir) {
+        while let file = readdir(dir!) {
             let entry: UnsafeMutablePointer<dirent> = file
             
             if let entryName = withUnsafeMutablePointer(&entry.pointee.d_name, { (ptr) -> String? in
