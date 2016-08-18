@@ -152,12 +152,11 @@ extension File {
     public func read(upTo byteCount: Int, timingOut deadline: Double = .never) throws -> Data {
         try ensureFileIsOpen()
 
-        var data = Data.buffer(with: byteCount)
-        let received = data.withUnsafeMutableBufferPointer {
-            filereadlh(file, $0.baseAddress, 1, $0.count, deadline.int64milliseconds)
-        }
+        let buffer = UnsafeMutablePointer<Byte>(allocatingCapacity: byteCount)
+        defer { buffer.deallocateCapacity(byteCount) }
 
-        let receivedData = Data(data.prefix(received))
+        let received = filereadlh(file, buffer, 1, byteCount, deadline.int64milliseconds)
+        let receivedData = Data(UnsafeBufferPointer(start: buffer, count: received))
 
         do {
             try ensureLastOperationSucceeded()
@@ -171,12 +170,11 @@ extension File {
     public func read(_ byteCount: Int, timingOut deadline: Double = .never) throws -> Data {
         try ensureFileIsOpen()
 
-        var data = Data.buffer(with: byteCount)
-        let received = data.withUnsafeMutableBufferPointer {
-            fileread(file, $0.baseAddress, $0.count, deadline.int64milliseconds)
-        }
+        let buffer = UnsafeMutablePointer<Byte>(allocatingCapacity: byteCount)
+        defer { buffer.deallocateCapacity(byteCount) }
 
-        let receivedData = Data(data.prefix(received))
+        let received = fileread(file, buffer, byteCount, deadline.int64milliseconds)
+        let receivedData = Data(UnsafeBufferPointer(start: buffer, count: received))
 
         do {
             try ensureLastOperationSucceeded()
