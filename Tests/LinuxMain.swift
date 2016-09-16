@@ -1,10 +1,6 @@
-#if os(Linux)
-
 import XCTest
-@testable import FileTestSuite
+import FileTests
 
 XCTMain([
     testCase(FileTests.allTests)
 ])
-
-#endif
